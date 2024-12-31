@@ -19,12 +19,12 @@ jobs:
       - name: Install Python
         uses: actions/setup-python@v5
         with:
-          python-version: $${{ inputs.python_version }}
+          python-version: ${{ inputs.python_version }}
           # architecture: x64
       - name: Install Nox
         run: pipx install nox
       - name: Run Tests
-        run: nox -p $${{ inputs.python_version }}
+        run: nox -p ${{ inputs.python_version }}
         # https://github.com/mamba-org/setup-micromamba
         #uses: mamba-org/setup-micromamba@v2
         #micromamba-version: '1.4.8-0'
