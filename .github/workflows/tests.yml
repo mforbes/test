@@ -1,0 +1,34 @@
+# .github/workflows/tests.yml
+# Based on https://github.com/orgs/community/discussions/52616
+name: Tests
+on:
+  # workflow_call is a required field of the "on" property,
+  # when intending to use the workflow as a reusable workflow
+  workflow_call:
+    inputs:
+      python_version:
+        required: true
+        type: string
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Install Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: $${{ inputs.python_version }}
+          # architecture: x64
+      - name: Install Nox
+        run: pipx install nox
+      - name: Run Tests
+        run: nox -p $${{ inputs.python_version }}
+        # https://github.com/mamba-org/setup-micromamba
+        #uses: mamba-org/setup-micromamba@v2
+        #micromamba-version: '1.4.8-0'
+        ##environment-file: environment.yml
+        #init-shell: >-
+        #  bash
+        #post-cleanup: 'all'

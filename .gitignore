@@ -1,0 +1,4 @@
+syntax:glob
+\.nox/
+\.pytest/
+\.pytest_cache/
