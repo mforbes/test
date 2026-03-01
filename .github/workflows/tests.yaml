@@ -22,21 +22,22 @@ jobs:
         with:
           path: |
             /usr/share/texlive
-            /usr/local/texlive
-            /usr/local/bin/
-          key: texlive-full-x86_64-linux-cache
+            /var/lib/texmf
+          key: texlive-${{ runner.os }}-cache
       - name: Install TeXLive (if not cached)
         if: steps.cache-texlive.outputs.cache-hit != 'true'
         run: |
-          sudo apt-get update && sudo apt-get install -y texlive-full
-          tree /usr
+          sudo apt-get update && sudo apt-get install -y texlive
+          echo "/usr/share/texlive/bin/x86_64-linux" >> $GITHUB_PATH
       - name: Add TeXLive to PATH (if cached)
         if: steps.cache-texlive.outputs.cache-hit == 'true'
-        run: echo "/usr/share/texlive/bin/x86_64-linux" >> $GITHUB_PATH
+        run: |
+          echo "/usr/share/texlive/bin/x86_64-linux" >> $GITHUB_PATH
       - name: Test LaTeX
         run: |
-          pdflatex -v
+          echo $PATH
           type pdflatex
+          pdflatex -V
       # - name: Install Python
       #   uses: actions/setup-python@v5
       #   with:
