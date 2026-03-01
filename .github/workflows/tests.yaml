@@ -17,6 +17,11 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      # Store your packages in .github/apt-packages.txt
+      - name: Load package list
+        id: package_list
+        run: echo "PACKAGES=$(tr '\n' ' ' < .github/apt-packages.txt)" >> $GITHUB_ENV
+
       - name: Prepare APT cache dir and symlink
         run: |
           mkdir -p .apt-cache/archives/partial
@@ -28,17 +33,20 @@ jobs:
         uses: actions/cache@v5
         with:
           path: .apt-cache/archives
-          key: ${{ runner.os }}-apt-cache-2026-Mar-1   
-
+          key: |
+            ${{ runner.os }}-apt-cache-${{ hashFiles('.github/apt-packages.txt') }}-${{ env.ImageOS }}
+          restore-keys: |
+            ${{ runner.os }}-apt-cache-
+            
       - name: Prepare APT cache dir and symlink
         if: steps.cache-texlive.outputs.cache-hit != 'true'
         run: |
          sudo apt-get update
-         sudo apt-get install -y -d texlive
+         sudo apt-get install -y -d $PACKAGES
 
       - name: Install TeXLive
         run:
-          sudo apt-get install -y texlive
+          sudo apt-get install -y $PACKAGES
 
       - name: Test LaTeX
         run: |
