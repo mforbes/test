@@ -16,28 +16,15 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-      - name: Cache TeXLive install
-        id: cache-texlive
-        uses: actions/cache@v5
+      - name: Install TeXLive
+        uses: xu-cheng/texlive-action@v3
         with:
-          path: |
-            /usr/share/texlive
-            /var/lib/texmf
-          key: texlive-${{ runner.os }}-cache
-      - name: Install TeXLive (if not cached)
-        if: steps.cache-texlive.outputs.cache-hit != 'true'
+          texlive_version: 2024
+          run: echo "/opt/texlive/bin/" >> $GITHUB_PATH
+      - name: Run LaTeX
         run: |
-          sudo apt-get update && sudo apt-get install -y texlive
-          echo "/usr/share/texlive/bin/x86_64-linux" >> $GITHUB_PATH
-      - name: Add TeXLive to PATH (if cached)
-        if: steps.cache-texlive.outputs.cache-hit == 'true'
-        run: |
-          echo "/usr/share/texlive/bin/x86_64-linux" >> $GITHUB_PATH
-      - name: Test LaTeX
-        run: |
-          echo $PATH
           type pdflatex
-          pdflatex -V
+          pdflatex -v
       # - name: Install Python
       #   uses: actions/setup-python@v5
       #   with:
