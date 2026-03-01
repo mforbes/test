@@ -16,9 +16,15 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      # Needed to allow tar root access when restoring system files
+      # See: https://github.com/actions/toolkit/issues/946
+      - name: root suid tar
+        run: sudo chown root /bin/tar && sudo chmod u+s /bin/tar
+        
       - name: Cache TeXLive install
         id: cache-texlive
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             /usr/share/texlive
