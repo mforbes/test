@@ -22,19 +22,23 @@ jobs:
         id: package_list
         run: echo "PACKAGES=$(tr '\n' ' ' < .github/apt-packages.txt)" >> $GITHUB_ENV
 
+      # https://github.com/actions/toolkit/issues/946
+      - name: Give tar suid root
+        run: sudo chown root /bin/tar && sudo chmod u+s /bin/tar
+        
       - name: Prepare APT cache dir and symlink
         run: |
           mkdir -p .apt-cache/archives/partial
           sudo rm -rf /var/cache/apt/archives
           sudo ln -s "$PWD/.apt-cache/archives" /var/cache/apt/archives
-          
+
       - name: Cache APT archive
         id: cache-apt-archive
         uses: actions/cache@v5
         with:
           path: .apt-cache/archives
           key: |
-            ${{ runner.os }}-apt-cache-${{ hashFiles('.github/apt-packages.txt') }}-${{ env.ImageOS }}
+            ${{ runner.os }}-apt-cache-${{ hashFiles('.github/apt-packages.txt') }}
           restore-keys: |
             ${{ runner.os }}-apt-cache-
             
@@ -43,6 +47,14 @@ jobs:
         run: |
          sudo apt-get update
          sudo apt-get install -y -d $PACKAGES
+
+      - name: Clean APT Cache locks & fix permissions
+        if: always()
+        run: |
+          sudo rm -f /var/cache/apt/archives/lock
+          #sudo rm -f /var/lib/dpkg/lock-frontend || true
+          #sudo rm -f /var/lib/apt/lists/lock || true
+          sudo chown -R $USER:$USER .apt-cache/archives
 
       - name: Install TeXLive
         run:
