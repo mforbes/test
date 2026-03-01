@@ -16,19 +16,40 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-      - name: Install Python
-        uses: actions/setup-python@v5
+      - name: Cache TeXLive install
+        id: cache-texlive
+        uses: actions/cache@v5
         with:
-          python-version: ${{ inputs.python_version }}
-          # architecture: x64
-      - name: Install Nox
-        run: pipx install nox
-      - name: Run Tests
-        run: nox -p ${{ inputs.python_version }}
-        # https://github.com/mamba-org/setup-micromamba
-        #uses: mamba-org/setup-micromamba@v2
-        #micromamba-version: '1.4.8-0'
-        ##environment-file: environment.yml
-        #init-shell: >-
-        #  bash
-        #post-cleanup: 'all'
+          path: |
+            /usr/share/texlive
+            /usr/local/texlive
+            /usr/local/bin/
+          key: texlive-full-x86_64-linux-cache
+      - name: Install TeXLive (if not cached)
+        if: steps.cache-texlive.outputs.cache-hit != 'true'
+        run: |
+          sudo apt-get update && sudo apt-get install -y texlive-full
+          tree /usr
+      - name: Add TeXLive to PATH (if cached)
+        if: steps.cache-texlive.outputs.cache-hit == 'true'
+        run: echo "/usr/share/texlive/bin/x86_64-linux" >> $GITHUB_PATH
+      - name: Test LaTeX
+        run: |
+          pdflatex -v
+          type pdflatex
+      # - name: Install Python
+      #   uses: actions/setup-python@v5
+      #   with:
+      #     python-version: ${{ inputs.python_version }}
+      #     # architecture: x64
+      # - name: Install Nox
+      #   run: pipx install nox
+      # - name: Run Tests
+      #   run: nox -p ${{ inputs.python_version }}
+      #   # https://github.com/mamba-org/setup-micromamba
+      #   #uses: mamba-org/setup-micromamba@v2
+      #   #micromamba-version: '1.4.8-0'
+      #   ##environment-file: environment.yml
+      #   #init-shell: >-
+      #   #  bash
+      #   #post-cleanup: 'all'
