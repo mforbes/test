@@ -17,28 +17,29 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Cache TeXLive install
-        id: cache-texlive
+      - name: Prepare APT cache dir and symlink
+        run: |
+          mkdir -p .apt-cache/archives/partial
+          sudo rm -rf /var/cache/apt/archives
+          sudo ln -s "$PWD/.apt-cache/archives" /var/cache/apt/archives
+          
+      - name: Cache APT archive
+        id: cache-apt-archive
         uses: actions/cache@v5
         with:
-          path: |
-            /usr/local/texlive
-          key: texlive-cache-2026-Mar-1.3
+          path: .apt-cache/archives
+          key: ${{ runner.os }}-apt-cache-2026-Mar-1   
 
-      - name: Install TeXLive (if not cached)
+      - name: Prepare APT cache dir and symlink
         if: steps.cache-texlive.outputs.cache-hit != 'true'
         run: |
-          wget https://mirror.ctan.org/systems/texlive/tlnet/install-tl-unx.tar.gz
-          tar -xzf install-tl-unx.tar.gz
-          cd install-tl-*/
-          sudo ./install-tl --no-interaction --scheme=small
-          ls -la /usr/local/texlive
-          tree /usr/local/texlive -L 3
-          echo "/usr/local/texlive/2024/bin/x86_64-linux" >> $GITHUB_PATH
+         sudo apt-get update
+         sudo apt-get install -y -d texlive
 
-      - name: Add TeXLive to PATH (if cached)
-        if: steps.cache-texlive.outputs.cache-hit == 'true'
-        run: echo "/usr/local/texlive/2024/bin/x86_64-linux" >> $GITHUB_PATH
+      - name: Install TeXLive
+        run:
+          sudo apt-get install -y texlive
+
       - name: Test LaTeX
         run: |
           echo $PATH
