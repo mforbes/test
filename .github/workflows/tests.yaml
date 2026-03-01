@@ -17,31 +17,28 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # Needed to allow tar root access when restoring system files
-      # See: https://github.com/actions/toolkit/issues/946
-      - name: root suid tar
-        run: sudo chown root /bin/tar && sudo chmod u+s /bin/tar
-        
       - name: Cache TeXLive install
         id: cache-texlive
         uses: actions/cache@v5
         with:
           path: |
-            /usr/bin/*tex*
-            /usr/share/texlive
-            /var/lib/texmf
-            /etc/texmf
-          key: texlive-cache-2026-Mar-1.2
+            /usr/local/texlive
+          key: texlive-cache-2026-Mar-1.3
 
       - name: Install TeXLive (if not cached)
         if: steps.cache-texlive.outputs.cache-hit != 'true'
         run: |
-          sudo apt-get update
-          sudo apt-get install -y texlive
+          wget https://mirror.ctan.org/systems/texlive/tlnet/install-tl-unx.tar.gz
+          tar -xzf install-tl-unx.tar.gz
+          cd install-tl-*/
+          sudo ./install-tl --no-interaction --scheme=small
+          ls -la /usr/local/texlive
+          tree /usr/local/texlive -L 3
+          echo "/usr/local/texlive/2024/bin/x86_64-linux" >> $GITHUB_PATH
 
       - name: Add TeXLive to PATH (if cached)
         if: steps.cache-texlive.outputs.cache-hit == 'true'
-        run: echo
+        run: echo "/usr/local/texlive/2024/bin/x86_64-linux" >> $GITHUB_PATH
       - name: Test LaTeX
         run: |
           echo $PATH
